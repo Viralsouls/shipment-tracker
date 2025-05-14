@@ -3,78 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shipment Tracker</title>
+  <title>Phthalo - Shipment Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 2rem;
-      background: #f2f2f2;
+      background-color: #e9f6f2;
+      color: #0c3b2e;
+      margin: 0;
+      padding: 20px;
     }
+
     h1 {
-      color: #333;
+      color: #12372A;
+      text-align: center;
     }
-    form {
-      margin-bottom: 2rem;
+
+    form, .filter-search {
+      background-color: #d2ede3;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
+
     input, select, button {
-      margin: 0.5rem;
-      padding: 0.5rem;
+      padding: 10px;
+      margin: 8px 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
+
+    button {
+      background-color: #12372A;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #1f5743;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      margin-top: 20px;
     }
+
     th, td {
-      border: 1px solid #ccc;
-      padding: 0.75rem;
-      text-align: left;
+      padding: 12px;
+      border: 1px solid #a3c9bb;
+      text-align: center;
     }
-    button {
-      cursor: pointer;
+
+    th {
+      background-color: #12372A;
+      color: white;
     }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
+
+    .action-buttons button {
+      margin: 0 5px;
     }
-    .modal-content {
-      background: white;
-      padding: 2rem;
-      border-radius: 5px;
-      width: 300px;
+
+    .highlight {
+      font-weight: bold;
+      color: #0c3b2e;
+    }
+
+    .filter-search {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .filter-search input, .filter-search select {
+      flex: 1;
+      min-width: 200px;
     }
   </style>
 </head>
 <body>
-  <h1>Shipment Tracker</h1>
+  <h1>Phthalo - Shipment Tracker</h1>
 
-  <!-- Search and Filter Section -->
-  <div>
-    <input type="text" id="search" placeholder="Search by origin or destination" oninput="filterShipments()" />
-    <select id="statusFilter" onchange="filterShipments()">
-      <option value="">Filter by status</option>
-      <option value="Draft">Draft</option>
-      <option value="Covered">Covered</option>
-      <option value="Dispatched">Dispatched</option>
-      <option value="At pick up">At pick up</option>
-      <option value="Picked up">Picked up</option>
-      <option value="En route">En route</option>
-      <option value="At receiver">At receiver</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Ready to bill">Ready to bill</option>
-    </select>
-  </div>
-
-  <!-- Add Load Form -->
-  <form id="loadForm">
+  <form id="shipment-form">
     <input type="text" id="origin" placeholder="Origin" required />
     <input type="text" id="destination" placeholder="Destination" required />
-    <select id="status">
+    <select id="status" required>
+      <option value="">Select Status</option>
       <option value="Draft">Draft</option>
       <option value="Covered">Covered</option>
       <option value="Dispatched">Dispatched</option>
@@ -88,7 +107,22 @@
     <button type="submit">Add Load</button>
   </form>
 
-  <!-- Shipments Table -->
+  <div class="filter-search">
+    <input type="text" id="search" placeholder="Search by origin or destination" />
+    <select id="statusFilter">
+      <option value="">Filter by Status</option>
+      <option value="Draft">Draft</option>
+      <option value="Covered">Covered</option>
+      <option value="Dispatched">Dispatched</option>
+      <option value="At pick up">At pick up</option>
+      <option value="Picked up">Picked up</option>
+      <option value="En route">En route</option>
+      <option value="At receiver">At receiver</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Ready to bill">Ready to bill</option>
+    </select>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -99,137 +133,82 @@
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody id="shipmentsTable"></tbody>
+    <tbody id="shipments"></tbody>
   </table>
 
-  <!-- Edit Modal -->
-  <div class="modal" id="editModal">
-    <div class="modal-content">
-      <h3>Edit Load</h3>
-      <form id="editForm">
-        <input type="hidden" id="editId" />
-        <input type="text" id="editOrigin" placeholder="Origin" required />
-        <input type="text" id="editDestination" placeholder="Destination" required />
-        <select id="editStatus">
-          <option value="Draft">Draft</option>
-          <option value="Covered">Covered</option>
-          <option value="Dispatched">Dispatched</option>
-          <option value="At pick up">At pick up</option>
-          <option value="Picked up">Picked up</option>
-          <option value="En route">En route</option>
-          <option value="At receiver">At receiver</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Ready to bill">Ready to bill</option>
-        </select>
-        <button type="submit">Update</button>
-        <button type="button" onclick="closeModal()">Cancel</button>
-      </form>
-    </div>
-  </div>
-
   <script>
-    const API = window.location.origin;
+    const shipmentsTable = document.getElementById("shipments");
+    const searchInput = document.getElementById("search");
+    const statusFilter = document.getElementById("statusFilter");
 
-    // Fetch and display shipments
     async function fetchShipments() {
-      const res = await fetch(`${API}/api/shipments`);
-      const data = await res.json();
-      displayShipments(data);
+      const res = await fetch("/api/shipments");
+      const shipments = await res.json();
+      displayShipments(shipments);
     }
 
     function displayShipments(shipments) {
-      const table = document.getElementById("shipmentsTable");
-      table.innerHTML = "";
+      const query = searchInput.value.toLowerCase();
+      const statusVal = statusFilter.value;
+      shipmentsTable.innerHTML = "";
 
-      shipments.forEach((load) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${load.load_id}</td>
-          <td>${load.origin}</td>
-          <td>${load.destination}</td>
-          <td>${load.status}</td>
-          <td>
-            <button onclick="openEditModal(${load.id}, '${load.origin}', '${load.destination}', '${load.status}')">Edit</button>
-            <button onclick="deleteLoad(${load.id})">Delete</button>
-          </td>
-        `;
-        table.appendChild(row);
-      });
+      shipments
+        .filter(s => {
+          const matchesSearch = s.origin.toLowerCase().includes(query) || s.destination.toLowerCase().includes(query);
+          const matchesStatus = !statusVal || s.status === statusVal;
+          return matchesSearch && matchesStatus;
+        })
+        .forEach(shipment => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="highlight">${shipment.load_id}</td>
+            <td>${shipment.origin}</td>
+            <td>${shipment.destination}</td>
+            <td>${shipment.status}</td>
+            <td class="action-buttons">
+              <button onclick="editShipment(${shipment.id})">Edit</button>
+              <button onclick="deleteShipment(${shipment.id})">Delete</button>
+            </td>
+          `;
+          shipmentsTable.appendChild(row);
+        });
     }
 
-    // Add new load
-    document.getElementById("loadForm").addEventListener("submit", async (e) => {
+    document.getElementById("shipment-form").addEventListener("submit", async e => {
       e.preventDefault();
       const origin = document.getElementById("origin").value;
       const destination = document.getElementById("destination").value;
       const status = document.getElementById("status").value;
 
-      await fetch(`${API}/add-load`, {
+      await fetch("/add-load", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ origin, destination, status }),
+        body: JSON.stringify({ origin, destination, status })
       });
 
       e.target.reset();
       fetchShipments();
     });
 
-    // Edit Load Modal
-    function openEditModal(id, origin, destination, status) {
-      document.getElementById("editId").value = id;
-      document.getElementById("editOrigin").value = origin;
-      document.getElementById("editDestination").value = destination;
-      document.getElementById("editStatus").value = status;
-      document.getElementById("editModal").style.display = "flex";
-    }
-
-    function closeModal() {
-      document.getElementById("editModal").style.display = "none";
-    }
-
-    // Update Load
-    document.getElementById("editForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = document.getElementById("editId").value;
-      const origin = document.getElementById("editOrigin").value;
-      const destination = document.getElementById("editDestination").value;
-      const status = document.getElementById("editStatus").value;
-
-      await fetch(`${API}/update-load/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ origin, destination, status }),
-      });
-
-      closeModal();
+    async function deleteShipment(id) {
+      await fetch(`/delete/${id}`, { method: "DELETE" });
       fetchShipments();
-    });
+    }
 
-    // Delete Load
-    async function deleteLoad(id) {
-      if (confirm("Are you sure you want to delete this load?")) {
-        await fetch(`${API}/delete-load/${id}`, { method: "DELETE" });
+    async function editShipment(id) {
+      const newStatus = prompt("Enter new status:");
+      if (newStatus) {
+        await fetch(`/edit/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus })
+        });
         fetchShipments();
       }
     }
 
-    // Filtering and Searching
-    function filterShipments() {
-      const searchQuery = document.getElementById("search").value.toLowerCase();
-      const statusFilter = document.getElementById("statusFilter").value;
-
-      fetch(`${API}/api/shipments`)
-        .then((res) => res.json())
-        .then((data) => {
-          const filteredData = data.filter(load => {
-            const matchStatus = statusFilter ? load.status === statusFilter : true;
-            const matchSearch = load.origin.toLowerCase().includes(searchQuery) || load.destination.toLowerCase().includes(searchQuery);
-            return matchStatus && matchSearch;
-          });
-
-          displayShipments(filteredData);
-        });
-    }
+    searchInput.addEventListener("input", fetchShipments);
+    statusFilter.addEventListener("change", fetchShipments);
 
     fetchShipments();
   </script>
