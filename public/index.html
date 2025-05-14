@@ -3,214 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Phthalo - Shipment Tracker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #e9f6f2;
-      color: #0c3b2e;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #12372A;
-      text-align: center;
-    }
-
-    form, .filter-search {
-      background-color: #d2ede3;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    input, select, button {
-      padding: 10px;
-      margin: 8px 5px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      background-color: #12372A;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    button:hover {
-      background-color: #1f5743;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    th, td {
-      padding: 12px;
-      border: 1px solid #a3c9bb;
-      text-align: center;
-    }
-
-    th {
-      background-color: #12372A;
-      color: white;
-    }
-
-    .action-buttons button {
-      margin: 0 5px;
-    }
-
-    .highlight {
-      font-weight: bold;
-      color: #0c3b2e;
-    }
-
-    .filter-search {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
-
-    .filter-search input, .filter-search select {
-      flex: 1;
-      min-width: 200px;
-    }
-  </style>
+  <title>Thalo</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
 </head>
 <body>
-  <h1>Phthalo - Shipment Tracker</h1>
+  <header>
+    <h1>Thalo - Shipment Tracker</h1>
+  </header>
 
-  <form id="shipment-form">
-    <input type="text" id="origin" placeholder="Origin" required />
-    <input type="text" id="destination" placeholder="Destination" required />
-    <select id="status" required>
-      <option value="">Select Status</option>
-      <option value="Draft">Draft</option>
-      <option value="Covered">Covered</option>
-      <option value="Dispatched">Dispatched</option>
-      <option value="At pick up">At pick up</option>
-      <option value="Picked up">Picked up</option>
-      <option value="En route">En route</option>
-      <option value="At receiver">At receiver</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Ready to bill">Ready to bill</option>
-    </select>
-    <button type="submit">Add Load</button>
-  </form>
+  <section class="form-section">
+    <form id="shipmentForm">
+      <input type="text" id="origin" placeholder="Origin" required />
+      <input type="text" id="destination" placeholder="Destination" required />
+      <select id="status" required>
+        <option value="">Select Status</option>
+        <option>Draft</option>
+        <option>Covered</option>
+        <option>Dispatched</option>
+        <option>At pick up</option>
+        <option>Picked up</option>
+        <option>En route</option>
+        <option>At receiver</option>
+        <option>Delivered</option>
+        <option>Ready to bill</option>
+      </select>
+      <button type="submit">Add Shipment</button>
+    </form>
+  </section>
 
-  <div class="filter-search">
-    <input type="text" id="search" placeholder="Search by origin or destination" />
-    <select id="statusFilter">
+  <section class="search-filter">
+    <input type="text" id="searchInput" placeholder="Search by Load ID or Destination">
+    <select id="filterStatus">
       <option value="">Filter by Status</option>
-      <option value="Draft">Draft</option>
-      <option value="Covered">Covered</option>
-      <option value="Dispatched">Dispatched</option>
-      <option value="At pick up">At pick up</option>
-      <option value="Picked up">Picked up</option>
-      <option value="En route">En route</option>
-      <option value="At receiver">At receiver</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Ready to bill">Ready to bill</option>
+      <option>Draft</option>
+      <option>Covered</option>
+      <option>Dispatched</option>
+      <option>At pick up</option>
+      <option>Picked up</option>
+      <option>En route</option>
+      <option>At receiver</option>
+      <option>Delivered</option>
+      <option>Ready to bill</option>
     </select>
-  </div>
+  </section>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Load ID</th>
-        <th>Origin</th>
-        <th>Destination</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="shipments"></tbody>
-  </table>
+  <section id="shipmentsList"></section>
 
-  <script>
-    const shipmentsTable = document.getElementById("shipments");
-    const searchInput = document.getElementById("search");
-    const statusFilter = document.getElementById("statusFilter");
-
-    async function fetchShipments() {
-      const res = await fetch("/api/shipments");
-      const shipments = await res.json();
-      displayShipments(shipments);
-    }
-
-    function displayShipments(shipments) {
-      const query = searchInput.value.toLowerCase();
-      const statusVal = statusFilter.value;
-      shipmentsTable.innerHTML = "";
-
-      shipments
-        .filter(s => {
-          const matchesSearch = s.origin.toLowerCase().includes(query) || s.destination.toLowerCase().includes(query);
-          const matchesStatus = !statusVal || s.status === statusVal;
-          return matchesSearch && matchesStatus;
-        })
-        .forEach(shipment => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="highlight">${shipment.load_id}</td>
-            <td>${shipment.origin}</td>
-            <td>${shipment.destination}</td>
-            <td>${shipment.status}</td>
-            <td class="action-buttons">
-              <button onclick="editShipment(${shipment.id})">Edit</button>
-              <button onclick="deleteShipment(${shipment.id})">Delete</button>
-            </td>
-          `;
-          shipmentsTable.appendChild(row);
-        });
-    }
-
-    document.getElementById("shipment-form").addEventListener("submit", async e => {
-      e.preventDefault();
-      const origin = document.getElementById("origin").value;
-      const destination = document.getElementById("destination").value;
-      const status = document.getElementById("status").value;
-
-      await fetch("/add-load", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ origin, destination, status })
-      });
-
-      e.target.reset();
-      fetchShipments();
-    });
-
-    async function deleteShipment(id) {
-      await fetch(`/delete/${id}`, { method: "DELETE" });
-      fetchShipments();
-    }
-
-    async function editShipment(id) {
-      const newStatus = prompt("Enter new status:");
-      if (newStatus) {
-        await fetch(`/edit/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus })
-        });
-        fetchShipments();
-      }
-    }
-
-    searchInput.addEventListener("input", fetchShipments);
-    statusFilter.addEventListener("change", fetchShipments);
-
-    fetchShipments();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

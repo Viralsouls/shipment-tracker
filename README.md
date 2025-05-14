@@ -1,2 +1,3 @@
-# shipment-tracker
-A simple logistics shipment tracking dashboard built with Node.js and JavaScript
+# Thalo
+
+A sleek and simple shipment tracking app.
