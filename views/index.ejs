@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thalo</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>Loads Overview</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Load ID</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="loadTableBody">
+      <% loads.forEach(load => { %>
+        <tr data-id="<%= load.id %>">
+          <td><%= load.load_id %></td>
+          <td><%= load.origin %></td>
+          <td><%= load.destination %></td>
+          <td><%= load.status %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+
+  <form action="/add" method="POST">
+    <input type="text" name="load_id" placeholder="Load ID" required>
+    <input type="text" name="origin" placeholder="Origin" required>
+    <input type="text" name="destination" placeholder="Destination" required>
+    <select name="status" required>
+      <option value="Draft">Draft</option>
+      <option value="Covered">Covered</option>
+      <option value="Dispatched">Dispatched</option>
+      <option value="At pick up">At pick up</option>
+      <option value="Picked up">Picked up</option>
+      <option value="En route">En route</option>
+      <option value="At receiver">At receiver</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Ready to bill">Ready to bill</option>
+    </select>
+    <button type="submit">Add Load</button>
+  </form>
+</body>
+</html>

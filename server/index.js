@@ -1,62 +1,53 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./db');
+const { Pool } = require('pg');  // PostgreSQL client
 const app = express();
 
-app.use(express.static(path.join(__dirname, '../public')));
+// Set up PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:dARMhxggLkanKczgWOsApobSIhnzPCtW@postgres.railway.internal:5432/railway',
+});
+
+// Serve static files (favicon, CSS, JS)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// View engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+// Body parser middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '../views'));
-
-const generateLoadID = () => `LD${Date.now()}`;
-
+// Fetch loads from PostgreSQL database and render the page
 app.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM shipments ORDER BY id DESC');
-    res.render('index', { shipments: result.rows });
+    const result = await pool.query('SELECT * FROM loads');
+    const loads = result.rows;
+    res.render('index', { loads });
   } catch (err) {
-    res.status(500).send('Error loading shipments');
+    console.error(err);
+    res.send('Error fetching loads');
   }
 });
 
-app.post('/add-load', async (req, res) => {
-  const { origin, destination, status } = req.body;
-  const load_id = generateLoadID();
+// Handle adding new loads
+app.post('/add', async (req, res) => {
+  const { load_id, origin, destination, status } = req.body;
   try {
     await pool.query(
-      'INSERT INTO shipments (load_id, origin, destination, status) VALUES ($1, $2, $3, $4)',
+      'INSERT INTO loads (load_id, origin, destination, status) VALUES ($1, $2, $3, $4)',
       [load_id, origin, destination, status]
     );
     res.redirect('/');
   } catch (err) {
-    res.status(500).send('Error adding load');
+    console.error(err);
+    res.send('Error adding new load');
   }
 });
 
-app.post('/edit-load', async (req, res) => {
-  const { id, origin, destination, status } = req.body;
-  try {
-    await pool.query(
-      'UPDATE shipments SET origin=$1, destination=$2, status=$3 WHERE id=$4',
-      [origin, destination, status, id]
-    );
-    res.redirect('/');
-  } catch (err) {
-    res.status(500).send('Error editing load');
-  }
-});
-
-app.post('/delete-load', async (req, res) => {
-  const { id } = req.body;
-  try {
-    await pool.query('DELETE FROM shipments WHERE id=$1', [id]);
-    res.redirect('/');
-  } catch (err) {
-    res.status(500).send('Error deleting load');
-  }
-});
-
+// Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

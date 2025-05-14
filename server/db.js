@@ -1,8 +1,8 @@
 const { Pool } = require('pg');
 
+// Set up PostgreSQL connection pool
 const pool = new Pool({
-  connectionString: 'postgresql://postgres:dARMhxggLkanKczgWOsApobSIhnzPCtW@shortline.proxy.rlwy.net:54392/railway',
-  ssl: { rejectUnauthorized: false } // Required for Railway SSL
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:dARMhxggLkanKczgWOsApobSIhnzPCtW@postgres.railway.internal:5432/railway',
 });
 
 module.exports = pool;

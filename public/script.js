@@ -1,10 +1,13 @@
-document.getElementById('search').addEventListener('input', function () {
-  const query = this.value.toLowerCase();
-  const rows = document.querySelectorAll('#shipmentTable tr');
+// This script will handle some basic interactivity on the page.
 
-  rows.forEach(row => {
-    const cells = Array.from(row.getElementsByTagName('td'));
-    const match = cells.some(cell => cell.textContent.toLowerCase().includes(query));
-    row.style.display = match ? '' : 'none';
-  });
+// Wait for the DOM to fully load before running any scripts
+document.addEventListener("DOMContentLoaded", () => {
+  const loadTableBody = document.getElementById("loadTableBody");
+
+  // Check if we have a table to populate
+  if (loadTableBody) {
+    console.log("Table body found, ready to populate loads.");
+  }
+
+  // You can implement more dynamic actions here, like sorting the table or filtering the loads.
 });
