@@ -12,7 +12,7 @@ const pool = new Pool({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // View engine setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'public'));
 app.set('view engine', 'ejs');
 
 // Body parser middleware
@@ -32,17 +32,19 @@ app.get('/', async (req, res) => {
 });
 
 // Handle adding new loads
-app.post('/add', async (req, res) => {
-  const { load_id, origin, destination, status } = req.body;
+app.post('/add-load', async (req, res) => {
+  const { origin, destination, status } = req.body;
+
   try {
-    await pool.query(
-      'INSERT INTO loads (load_id, origin, destination, status) VALUES ($1, $2, $3, $4)',
+    const load_id = await generateLoadId(); // Assuming this exists
+    await db.query(
+      'INSERT INTO shipments (load_id, origin, destination, status) VALUES ($1, $2, $3, $4)',
       [load_id, origin, destination, status]
     );
     res.redirect('/');
   } catch (err) {
-    console.error(err);
-    res.send('Error adding new load');
+    console.error('Error adding new load:', err);
+    res.status(500).send('Internal Server Error');
   }
 });
 
