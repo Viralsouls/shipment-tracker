@@ -2,76 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Thalo</title>
+  <title>Thalo – Shipment Tracker</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body>
-  <h1>Thalo Shipment Tracker</h1>
+  <header>
+    <h1>Thalo – Shipment Tracker</h1>
+  </header>
 
-  <form action="/add-load" method="POST">
-    <input type="text" name="origin" placeholder="Origin" required>
-    <input type="text" name="destination" placeholder="Destination" required>
-    <select name="status" required>
-      <option value="Draft">Draft</option>
-      <option value="Covered">Covered</option>
-      <option value="Dispatched">Dispatched</option>
-      <option value="At pick up">At pick up</option>
-      <option value="Picked up">Picked up</option>
-      <option value="En route">En route</option>
-      <option value="At receiver">At receiver</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Ready to bill">Ready to bill</option>
-    </select>
-    <button type="submit">Add Load</button>
-  </form>
+  <main>
+    <section class="controls">
+      <input type="text" id="searchInput" placeholder="Search by Load ID, Origin, Destination..." />
+      <select id="statusFilter">
+        <option value="">Filter by Status</option>
+        <option value="Draft">Draft</option>
+        <option value="Covered">Covered</option>
+        <option value="Dispatched">Dispatched</option>
+        <option value="At pick up">At pick up</option>
+        <option value="Picked up">Picked up</option>
+        <option value="En route">En route</option>
+        <option value="At receiver">At receiver</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Ready to bill">Ready to bill</option>
+      </select>
+    </section>
 
-  <input type="text" id="search" placeholder="Search by Load ID or Status...">
+    <section class="form-section">
+      <h2>Add New Load</h2>
+      <form id="addForm">
+        <input type="text" id="origin" placeholder="Origin" required />
+        <input type="text" id="destination" placeholder="Destination" required />
+        <select id="status" required>
+          <option value="">Select Status</option>
+          <option value="Draft">Draft</option>
+          <option value="Covered">Covered</option>
+          <option value="Dispatched">Dispatched</option>
+          <option value="At pick up">At pick up</option>
+          <option value="Picked up">Picked up</option>
+          <option value="En route">En route</option>
+          <option value="At receiver">At receiver</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Ready to bill">Ready to bill</option>
+        </select>
+        <button type="submit">Add Load</button>
+      </form>
+    </section>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Load ID</th>
-        <th>Origin</th>
-        <th>Destination</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="shipmentTable">
-      <% shipments.forEach(s => { %>
-        <tr>
-          <td><%= s.load_id %></td>
-          <td><%= s.origin %></td>
-          <td><%= s.destination %></td>
-          <td><%= s.status %></td>
-          <td>
-            <form action="/edit-load" method="POST" style="display:inline;">
-              <input type="hidden" name="id" value="<%= s.id %>">
-              <input type="text" name="origin" value="<%= s.origin %>" required>
-              <input type="text" name="destination" value="<%= s.destination %>" required>
-              <select name="status" required>
-                <option <%= s.status === 'Draft' ? 'selected' : '' %> value="Draft">Draft</option>
-                <option <%= s.status === 'Covered' ? 'selected' : '' %> value="Covered">Covered</option>
-                <option <%= s.status === 'Dispatched' ? 'selected' : '' %> value="Dispatched">Dispatched</option>
-                <option <%= s.status === 'At pick up' ? 'selected' : '' %> value="At pick up">At pick up</option>
-                <option <%= s.status === 'Picked up' ? 'selected' : '' %> value="Picked up">Picked up</option>
-                <option <%= s.status === 'En route' ? 'selected' : '' %> value="En route">En route</option>
-                <option <%= s.status === 'At receiver' ? 'selected' : '' %> value="At receiver">At receiver</option>
-                <option <%= s.status === 'Delivered' ? 'selected' : '' %> value="Delivered">Delivered</option>
-                <option <%= s.status === 'Ready to bill' ? 'selected' : '' %> value="Ready to bill">Ready to bill</option>
-              </select>
-              <button>Save</button>
-            </form>
-            <form action="/delete-load" method="POST" style="display:inline;">
-              <input type="hidden" name="id" value="<%= s.id %>">
-              <button>Delete</button>
-            </form>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+    <section class="table-section">
+      <h2>All Shipments</h2>
+      <table id="shipmentsTable">
+        <thead>
+          <tr>
+            <th>Load ID</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="shipmentsBody">
+          <% shipments.forEach(shipment => { %>
+            <tr data-id="<%= shipment.id %>">
+              <td><%= shipment.load_id %></td>
+              <td><%= shipment.origin %></td>
+              <td><%= shipment.destination %></td>
+              <td><%= shipment.status %></td>
+              <td>
+                <button class="editBtn">Edit</button>
+                <button class="deleteBtn">Delete</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <%= new Date().getFullYear() %> Thalo. All rights reserved.</p>
+  </footer>
 
   <script src="/script.js"></script>
 </body>
