@@ -1,67 +1,62 @@
 const express = require('express');
-const cors = require('cors');
-const db = require('./db');
-
+const path = require('path');
+const pool = require('./db');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'));
 
-app.get('/api/shipments', (req, res) => {
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+
+const generateLoadID = () => `LD${Date.now()}`;
+
+app.get('/', async (req, res) => {
   try {
-    const shipments = db.prepare('SELECT * FROM shipments').all();
-    res.json(shipments);
+    const result = await pool.query('SELECT * FROM shipments ORDER BY id DESC');
+    res.render('index', { shipments: result.rows });
   } catch (err) {
-    console.error('Error fetching shipments:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).send('Error loading shipments');
   }
 });
 
-app.post('/add-load', (req, res) => {
+app.post('/add-load', async (req, res) => {
   const { origin, destination, status } = req.body;
-  const loadId = 'LD' + Date.now();
-
+  const load_id = generateLoadID();
   try {
-    const stmt = db.prepare('INSERT INTO shipments (load_id, origin, destination, status) VALUES (?, ?, ?, ?)');
-    stmt.run(loadId, origin, destination, status);
-    res.status(201).json({ message: 'Load added successfully' });
+    await pool.query(
+      'INSERT INTO shipments (load_id, origin, destination, status) VALUES ($1, $2, $3, $4)',
+      [load_id, origin, destination, status]
+    );
+    res.redirect('/');
   } catch (err) {
-    console.error('Error adding load:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).send('Error adding load');
   }
 });
 
-// ✅ EDIT load
-app.put('/update-load/:id', (req, res) => {
-  const { id } = req.params;
-  const { origin, destination, status } = req.body;
-
+app.post('/edit-load', async (req, res) => {
+  const { id, origin, destination, status } = req.body;
   try {
-    const stmt = db.prepare('UPDATE shipments SET origin = ?, destination = ?, status = ? WHERE id = ?');
-    stmt.run(origin, destination, status, id);
-    res.json({ message: 'Load updated successfully' });
+    await pool.query(
+      'UPDATE shipments SET origin=$1, destination=$2, status=$3 WHERE id=$4',
+      [origin, destination, status, id]
+    );
+    res.redirect('/');
   } catch (err) {
-    console.error('Error updating load:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).send('Error editing load');
   }
 });
 
-// ❌ DELETE load
-app.delete('/delete-load/:id', (req, res) => {
-  const { id } = req.params;
-
+app.post('/delete-load', async (req, res) => {
+  const { id } = req.body;
   try {
-    const stmt = db.prepare('DELETE FROM shipments WHERE id = ?');
-    stmt.run(id);
-    res.json({ message: 'Load deleted successfully' });
+    await pool.query('DELETE FROM shipments WHERE id=$1', [id]);
+    res.redirect('/');
   } catch (err) {
-    console.error('Error deleting load:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).send('Error deleting load');
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
