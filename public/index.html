@@ -1,55 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Thalo</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body>
-  <header>
-    <h1>Thalo - Shipment Tracker</h1>
-  </header>
+  <h1>Thalo Shipment Tracker</h1>
 
-  <section class="form-section">
-    <form id="shipmentForm">
-      <input type="text" id="origin" placeholder="Origin" required />
-      <input type="text" id="destination" placeholder="Destination" required />
-      <select id="status" required>
-        <option value="">Select Status</option>
-        <option>Draft</option>
-        <option>Covered</option>
-        <option>Dispatched</option>
-        <option>At pick up</option>
-        <option>Picked up</option>
-        <option>En route</option>
-        <option>At receiver</option>
-        <option>Delivered</option>
-        <option>Ready to bill</option>
-      </select>
-      <button type="submit">Add Shipment</button>
-    </form>
-  </section>
-
-  <section class="search-filter">
-    <input type="text" id="searchInput" placeholder="Search by Load ID or Destination">
-    <select id="filterStatus">
-      <option value="">Filter by Status</option>
-      <option>Draft</option>
-      <option>Covered</option>
-      <option>Dispatched</option>
-      <option>At pick up</option>
-      <option>Picked up</option>
-      <option>En route</option>
-      <option>At receiver</option>
-      <option>Delivered</option>
-      <option>Ready to bill</option>
+  <form action="/add-load" method="POST">
+    <input type="text" name="origin" placeholder="Origin" required>
+    <input type="text" name="destination" placeholder="Destination" required>
+    <select name="status" required>
+      <option value="Draft">Draft</option>
+      <option value="Covered">Covered</option>
+      <option value="Dispatched">Dispatched</option>
+      <option value="At pick up">At pick up</option>
+      <option value="Picked up">Picked up</option>
+      <option value="En route">En route</option>
+      <option value="At receiver">At receiver</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Ready to bill">Ready to bill</option>
     </select>
-  </section>
+    <button type="submit">Add Load</button>
+  </form>
 
-  <section id="shipmentsList"></section>
+  <input type="text" id="search" placeholder="Search by Load ID or Status...">
 
-  <script src="script.js"></script>
+  <table>
+    <thead>
+      <tr>
+        <th>Load ID</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="shipmentTable">
+      <% shipments.forEach(s => { %>
+        <tr>
+          <td><%= s.load_id %></td>
+          <td><%= s.origin %></td>
+          <td><%= s.destination %></td>
+          <td><%= s.status %></td>
+          <td>
+            <form action="/edit-load" method="POST" style="display:inline;">
+              <input type="hidden" name="id" value="<%= s.id %>">
+              <input type="text" name="origin" value="<%= s.origin %>" required>
+              <input type="text" name="destination" value="<%= s.destination %>" required>
+              <select name="status" required>
+                <option <%= s.status === 'Draft' ? 'selected' : '' %> value="Draft">Draft</option>
+                <option <%= s.status === 'Covered' ? 'selected' : '' %> value="Covered">Covered</option>
+                <option <%= s.status === 'Dispatched' ? 'selected' : '' %> value="Dispatched">Dispatched</option>
+                <option <%= s.status === 'At pick up' ? 'selected' : '' %> value="At pick up">At pick up</option>
+                <option <%= s.status === 'Picked up' ? 'selected' : '' %> value="Picked up">Picked up</option>
+                <option <%= s.status === 'En route' ? 'selected' : '' %> value="En route">En route</option>
+                <option <%= s.status === 'At receiver' ? 'selected' : '' %> value="At receiver">At receiver</option>
+                <option <%= s.status === 'Delivered' ? 'selected' : '' %> value="Delivered">Delivered</option>
+                <option <%= s.status === 'Ready to bill' ? 'selected' : '' %> value="Ready to bill">Ready to bill</option>
+              </select>
+              <button>Save</button>
+            </form>
+            <form action="/delete-load" method="POST" style="display:inline;">
+              <input type="hidden" name="id" value="<%= s.id %>">
+              <button>Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <script src="/script.js"></script>
 </body>
 </html>
