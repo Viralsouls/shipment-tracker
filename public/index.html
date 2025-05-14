@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shipment Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+      margin-bottom: 2rem;
+    }
+
+    input, select, button {
+      padding: 0.5rem;
+      margin: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    .actions button {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shipment Tracker</h1>
+
+  <form id="shipmentForm">
+    <input type="text" id="origin" placeholder="Origin" required />
+    <input type="text" id="destination" placeholder="Destination" required />
+    <select id="status" required>
+      <option value="">Select Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Dispatched">Dispatched</option>
+      <option value="Delivered">Delivered</option>
+    </select>
+    <button type="submit">Add Shipment</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Load ID</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="shipmentTableBody"></tbody>
+  </table>
+
+  <script>
+    let editingId = null;
+
+    async function fetchShipments() {
+      const res = await fetch('/api/shipments');
+      const shipments = await res.json();
+
+      const tbody = document.getElementById('shipmentTableBody');
+      tbody.innerHTML = '';
+
+      shipments.forEach(({ id, load_id, origin, destination, status }) => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+          <td>${load_id}</td>
+          <td>${origin}</td>
+          <td>${destination}</td>
+          <td>${status}</td>
+          <td class="actions">
+            <button onclick="startEdit(${id}, '${origin}', '${destination}', '${status}')">Edit</button>
+            <button onclick="deleteShipment(${id})">Delete</button>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    async function addShipment(e) {
+      e.preventDefault();
+
+      const origin = document.getElementById('origin').value;
+      const destination = document.getElementById('destination').value;
+      const status = document.getElementById('status').value;
+
+      if (editingId) {
+        await fetch(`/api/shipments/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origin, destination, status })
+        });
+        editingId = null;
+      } else {
+        await fetch('/api/shipments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origin, destination, status })
+        });
+      }
+
+      document.getElementById('shipmentForm').reset();
+      fetchShipments();
+    }
+
+    function startEdit(id, origin, destination, status) {
+      editingId = id;
+      document.getElementById('origin').value = origin;
+      document.getElementById('destination').value = destination;
+      document.getElementById('status').value = status;
+    }
+
+    async function deleteShipment(id) {
+      await fetch(`/api/shipments/${id}`, {
+        method: 'DELETE'
+      });
+      fetchShipments();
+    }
+
+    document.getElementById('shipmentForm').addEventListener('submit', addShipment);
+    fetchShipments();
+  </script>
+</body>
+</html>
